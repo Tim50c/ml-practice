@@ -84,4 +84,71 @@ def softmax_derivative(x: list[float]):
     return s
 
 
-print(softmax_derivative([1.0, 2.0, 3.0]))
+import numpy as np
+
+
+def gradient_descent(X, y, weights, learning_rate, n_epochs, batch_size=1, method='batch'):
+    """
+    Perform gradient descent optimization.
+
+    Args:
+        X: Feature matrix of shape (m, n)
+        y: Target values of shape (m,)
+        weights: Initial weights of shape (n,)
+        learning_rate: Step size for gradient descent
+        n_epochs: Number of complete passes through the dataset
+        batch_size: Size of batches for mini-batch gradient descent (default: 1)
+        method: Type of gradient descent ('batch', 'stochastic', or 'mini_batch')
+
+    Returns:
+        Optimized weights
+    """
+    if method == 'batch':
+        for i in range(n_epochs):
+            e = X @ weights - y
+            weights -= learning_rate * (2 / len(y)) * (X.T @ e)
+
+    if method == 'stochastic':
+        for i in range(n_epochs):
+            for j in range(len(y)):
+                e = X[j, :] @ weights - y[j]
+                weights -= learning_rate * 2 * e * X[j]
+
+    if method == 'mini_batch':
+        for i in range(n_epochs):
+            batches = int(len(y) / batch_size)
+            for j in range(batches):
+                begin = j * batch_size
+                end = j * (batch_size + 1)
+                e = X[begin:end, :] @ weights - y[begin:end]
+                weights -= learning_rate * (2 / batch_size) * (X[begin:end, :].T @ e)
+
+    return weights
+
+def find_treasure(start_x: float) -> float:
+    """
+    Find the x-coordinate where f(x) = x^4 - 3x^3 + 2 is minimized.
+
+  Returns:
+        float: The x-coordinate of the minimum point.
+    """
+    tolerance = 1e-6
+    f = lambda t: t**4 - 3*t**3 + 2
+    f_prime = lambda t: 4*t**3 - 9*t**2
+    x = start_x
+    eta0 = 0.1
+
+    for i in range(1000):
+      eta = eta0*pow(i + 1.0, -0.5)
+      x_new = x - eta*f_prime(x)
+      if f(x) - f(x_new) <= tolerance:
+        break
+
+      x = x_new
+
+    return x
+
+
+r = find_treasure(-1)
+print(r)
+print(abs(r - 2.25) < 1e-2)
