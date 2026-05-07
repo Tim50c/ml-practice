@@ -41,7 +41,7 @@ class CovariancePCA:
         X_centered = X - self.mean_
 
         # 2. Compute the covariance matrix
-        # Using np.cov is standard, but keeping your manual dot product
+        # Using np.cov is standard, but keeping the manual dot product
         # approach is perfectly fine and often slightly faster.
         cov_matrix = (X_centered.T @ X_centered) / (n_samples - 1)
 
@@ -61,6 +61,98 @@ class CovariancePCA:
         self.explained_variance_ = sorted_eigenvalues[:self.n_components]
         total_variance = np.sum(sorted_eigenvalues)
 
+        if total_variance > 0:
+            self.explained_variance_ratio_ = self.explained_variance_ / total_variance
+        else:
+            self.explained_variance_ratio_ = np.zeros_like(self.explained_variance_)
+
+        return self
+
+    def transform(self, X: np.ndarray) -> np.ndarray:
+        """
+        Apply the learned reduction to data.
+
+        Args:
+            X: Data to transform, shape (n_samples, n_features)
+
+        Returns:
+            X_reduced: shape (n_samples, n_components)
+        """
+        if self.components_ is None or self.mean_ is None:
+            raise RuntimeError("This PCA instance is not fitted yet. Call 'fit' first.")
+
+        X_centered = X - self.mean_
+        return X_centered @ self.components_
+
+    def fit_transform(self, X: np.ndarray) -> np.ndarray:
+        """Fit the model with X and apply the dimensionality reduction on X."""
+        return self.fit(X).transform(X)
+
+
+
+class SVDPCA:
+    """
+    Principal Component Analysis (PCA) using Singular Value Decomposition (SVD).
+    """
+
+    def __init__(self, n_components: int = 10):
+        if n_components <= 0:
+            raise ValueError("n_components must be a positive integer.")
+
+        self.n_components = n_components
+
+        # Learned attributes (suffixed with _ to denote they are learned during fit)
+        self.components_: np.ndarray | None = None
+        self.mean_: np.ndarray | None = None
+        self.explained_variance_: np.ndarray | None = None
+        self.explained_variance_ratio_: np.ndarray | None = None
+
+    def fit(self, X: np.ndarray) -> 'SVDPCA':
+        """
+        Learn the reduction from training data.
+
+        Args:
+            X: Training data, shape (n_samples, n_features)
+
+        Returns:
+            self
+        """
+        n_samples, n_features = X.shape
+
+        if self.n_components > n_features:
+            raise ValueError(
+                f"n_components ({self.n_components}) cannot exceed "
+                f"number of features ({n_features})."
+            )
+
+        # 1. Center the data
+        # PCA requires centering the features around zero so the first principal
+        # component describes the direction of maximum variance.
+        self.mean_ = np.mean(X, axis=0)
+        X_centered = X - self.mean_
+
+        # 2. Perform Singular Value Decomposition
+        # U: Unitary array containing left singular vectors
+        # S: 1D array of singular values (sorted in descending order by default)
+        # Vh: Unitary array containing right singular vectors (as rows)
+        # full_matrices=False computes only the required reduced matrices, saving memory.
+        U, S, Vh = np.linalg.svd(X_centered, full_matrices=False)
+
+        # 3. Store the top n_components
+        # Vh has shape (min(n_samples, n_features), n_features).
+        # We take the transpose to get shape (n_features, min(n_samples, n_features))
+        # and then slice the first `n_components` columns to create our projection matrix.
+        self.components_ = Vh.T[:, :self.n_components]
+
+        # 4. Calculate explained variance metrics
+        # The eigenvalues of the covariance matrix are equal to the squared singular
+        # values divided by the degrees of freedom (n_samples - 1).
+        variances = (S ** 2) / (n_samples - 1)
+
+        self.explained_variance_ = variances[:self.n_components]
+        total_variance = np.sum(variances)
+
+        # Calculate the ratio (percentage) of variance explained by each selected component
         if total_variance > 0:
             self.explained_variance_ratio_ = self.explained_variance_ / total_variance
         else:
