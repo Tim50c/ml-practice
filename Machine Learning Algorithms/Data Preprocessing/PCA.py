@@ -179,3 +179,11 @@ class SVDPCA:
     def fit_transform(self, X: np.ndarray) -> np.ndarray:
         """Fit the model with X and apply the dimensionality reduction on X."""
         return self.fit(X).transform(X)
+
+
+X = np.array([[1, 2], [2, 3], [5, 5]])
+pca = CovariancePCA(X.shape[1])
+pca.fit(X)
+X_pca = pca.transform(X)
+
+print(X_pca)

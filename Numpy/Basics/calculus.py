@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def quotient_rule_derivative(g_coeffs: list, h_coeffs: list, x: float) -> float:
     """
     Compute the derivative of f(x) = g(x)/h(x) at point x using the quotient rule.
@@ -26,10 +27,12 @@ def quotient_rule_derivative(g_coeffs: list, h_coeffs: list, x: float) -> float:
 
     return (g_der_val * h_val - g_val * h_der_val) / (h_val ** 2)
 
+
 def poly_term_derivative(c: float, x: float, n: float) -> float:
     if x == 0.0 or n == 0.0:
         return 0.0
-    return c*n*x**(n-1)
+    return c * n * x ** (n - 1)
+
 
 def jacobian_matrix(f, x: list[float], h: float = 1e-5) -> list[list[float]]:
     """
@@ -125,26 +128,27 @@ def gradient_descent(X, y, weights, learning_rate, n_epochs, batch_size=1, metho
 
     return weights
 
+
 def find_treasure(start_x: float) -> float:
     """
     Find the x-coordinate where f(x) = x^4 - 3x^3 + 2 is minimized.
 
-  Returns:
+    Returns:
         float: The x-coordinate of the minimum point.
     """
     tolerance = 1e-6
-    f = lambda t: t**4 - 3*t**3 + 2
-    f_prime = lambda t: 4*t**3 - 9*t**2
+    f = lambda t: t ** 4 - 3 * t ** 3 + 2
+    f_prime = lambda t: 4 * t ** 3 - 9 * t ** 2
     x = start_x
     eta0 = 0.1
 
     for i in range(1000):
-      eta = eta0*pow(i + 1.0, -0.5)
-      x_new = x - eta*f_prime(x)
-      if f(x) - f(x_new) <= tolerance:
-        break
+        eta = eta0 * pow(i + 1.0, -0.5)
+        x_new = x - eta * f_prime(x)
+        if f(x) - f(x_new) <= tolerance:
+            break
 
-      x = x_new
+        x = x_new
 
     return x
 
